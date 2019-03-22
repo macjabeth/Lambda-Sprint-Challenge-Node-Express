@@ -15,11 +15,10 @@ const schema = Joi.object().keys({
 router.post('/', async (req, res) => {
   let { body: action } = req;
 
-  const result = Joi.validate(action, schema);
+  const result = Joi.validate(action, schema, { abortEarly: false });
   if (result.error) {
-    return res.status(400).json({
-      error: result.error.details[0].message
-    });
+    const messages = result.error.details.map(err => err.message);
+    return res.status(400).json({ error: messages });
   }
 
   try {
@@ -65,11 +64,10 @@ router.put('/:id', async (req, res) => {
   const { body: changes } = req;
   const { id } = req.params;
 
-  const result = Joi.validate(changes, schema);
+  const result = Joi.validate(changes, schema, { abortEarly: false });
   if (result.error) {
-    return res.status(400).json({
-      error: result.error.details[0].message
-    });
+    const messages = result.error.details.map(err => err.message);
+    return res.status(400).json({ error: messages });
   }
 
   try {
