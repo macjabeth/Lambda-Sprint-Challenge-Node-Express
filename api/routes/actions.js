@@ -1,6 +1,7 @@
 const Joi = require('joi');
 const router = require('express').Router();
 const actionDB = require('../helpers/actionModel');
+const projectDB = require('../helpers/projectModel');
 
 // Schema Validation
 const schema = Joi.object().keys({
@@ -22,8 +23,10 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    action = await actionDB.insert(action);
-    res.status(201).json(action);
+    const project = await projectDB.get(action.project_id);
+    Boolean(project)
+      ? res.status(201).json(await actionDB.insert(action))
+      : res.status(404).json({ message: 'The project with the specified ID does not exist.' });
   } catch (error) {
     res.status(500).json({
       error: `There was an error while saving the action to the database; ${error}`
@@ -34,11 +37,11 @@ router.post('/', async (req, res) => {
 // R - GET
 router.get('/', async (req, res) => {
   try {
-    const projects = await actionDB.get();
-    res.status(200).json(projects);
+    const actions = await actionDB.get();
+    res.status(200).json(actions);
   } catch (error) {
     res.status(500).json({
-      error: `The projects information could not be retrieved; ${error}`
+      error: `The actions information could not be retrieved; ${error}`
     });
   }
 });
@@ -70,10 +73,13 @@ router.put('/:id', async (req, res) => {
   }
 
   try {
-    const action = await actionDB.update(id, changes);
-    Boolean(action)
-      ? res.status(200).json(action)
-      : res.status(404).json({ message: 'The action with the specified ID does not exist.' });
+    let action;
+    const project = await projectDB.get(action.project_id);
+    Boolean(project)
+      ? Boolean(action = await actionDB.update(id, changes))
+        ? res.status(200).json(action)
+        : res.status(404).json({ message: 'The action with the specified ID does not exist.' })
+      : res.status(404).json({ message: 'The project ID associated with this action does not exist.' });
   } catch (error) {
     res.status(500).json({
       error: `The action information could not be modified; ${error}`
