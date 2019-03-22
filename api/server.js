@@ -16,12 +16,10 @@ if (server.get('env') === 'development') {
 }
 
 // routers
-const actions = require('./routes/actions');
-const projects = require('./routes/projects');
+server.use('/api/actions', require('./routes/actions'));
+server.use('/api/projects', require('./routes/projects'));
 
-server.use('/api/actions', actions);
-server.use('/api/projects', projects);
-
+// sanity check
 server.get('/api', (req, res) => {
   res.status(200).json({ message: 'API Up & Running!' });
 });
